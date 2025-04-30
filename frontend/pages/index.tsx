@@ -1,36 +1,30 @@
-// frontend/pages/index.tsx
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
+import { useWorkoutStore } from '../store/useWorkoutStore';
 import axios from 'axios';
 import WorkoutForm from '../components/WorkoutForm';
 import Navbar from '../components/Navbar';
 
 export default function Home() {
-  const [workouts, setWorkouts] = useState([]);
+  const { 
+    workouts, 
+    fetchWorkouts, 
+    removeWorkout 
+  } = useWorkoutStore();
 
-  // Fetch workouts on initial load
+  // Fetch workouts on component mount
   useEffect(() => {
     fetchWorkouts();
-  }, []);
+  }, [fetchWorkouts]);
 
-  const fetchWorkouts = async () => {
+  const handleDelete = async (id: number) => {
     try {
-      const response = await axios.get('http://localhost:8000/workouts/');
-      setWorkouts(response.data);
+      await axios.delete(`http://localhost:8000/workouts/${id}`);
+      removeWorkout(id);
     } catch (error) {
-      console.error('Error fetching workouts:', error);
+      console.error('Delete error:', error);
+      alert('Failed to delete workout');
     }
   };
-
-    // ADD THIS FUNCTION
-    const handleDelete = async (workoutId: number) => {
-      try {
-        await axios.delete(`http://localhost:8000/workouts/${workoutId}`);
-        fetchWorkouts(); // Refresh the list
-      } catch (error) {
-        console.error('Delete error:', error);
-        alert('Failed to delete workout');
-      }
-    };
 
   return (
     <div className="min-h-screen bg-gray-100">
@@ -50,44 +44,30 @@ export default function Home() {
               
               {/* Stats Cards */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                <div className="bg-blue-50 p-4 rounded-lg">
-                  <h3 className="text-sm text-blue-600">Total Workouts</h3>
-                  <p className="text-2xl font-bold">{workouts.length}</p>
-                </div>
-                <div className="bg-green-50 p-4 rounded-lg">
-                  <h3 className="text-sm text-green-600">Total Sets</h3>
-                  <p className="text-2xl font-bold">
-                    {workouts.reduce((sum, workout) => sum + workout.sets, 0)}
-                  </p>
-                </div>
-                <div className="bg-purple-50 p-4 rounded-lg">
-                  <h3 className="text-sm text-purple-600">Total Reps</h3>
-                  <p className="text-2xl font-bold">
-                    {workouts.reduce((sum, workout) => sum + workout.reps, 0)}
-                  </p>
-                </div>
+                {/* ... keep existing stats cards ... */}
               </div>
 
               {/* Workouts Grid */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {workouts.map(workout => (
-                  
                   <div key={workout.id} className="p-4 border rounded-lg mb-4">
-                  <div className="flex justify-between items-center"> {/* Changed to items-center */}
-                    <div>
-                      <h3 className="font-bold text-lg">{workout.name}</h3>
-                      <p className="text-gray-600">
-                        {workout.sets} sets x {workout.reps} reps
-                      </p>
+                    <div className="flex justify-between items-center">
+                      <div>
+                        <h3 className="font-bold text-lg">{workout.name}</h3>
+                        <p className="text-gray-600">
+                          {workout.sets} sets x {workout.reps} reps
+                        </p>
+                        <small className="text-gray-400">
+                          {new Date(workout.created_at).toLocaleDateString()}
+                        </small>
+                      </div>
+                      <button 
+                        onClick={() => handleDelete(workout.id)}
+                        className="text-red-500 hover:text-red-700 px-3 py-1 rounded"
+                      >
+                        Delete
+                      </button>
                     </div>
-                    {/* ADD THIS BUTTON */}
-                    <button 
-                      onClick={() => handleDelete(workout.id)}
-                      className="text-red-500 hover:text-red-700 px-3 py-1 rounded"
-                    >
-                      Delete
-                    </button>
-                  </div>
                   </div>
                 ))}
               </div>

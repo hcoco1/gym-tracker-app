@@ -1,22 +1,26 @@
 // frontend/components/WorkoutForm.tsx
 import { useState } from 'react';
 import axios from 'axios';
+import { useWorkoutStore } from '../store/useWorkoutStore';  // Add this import
 
 export default function WorkoutForm() {
   const [name, setName] = useState('');
   const [sets, setSets] = useState('');
   const [reps, setReps] = useState('');
+  const { addWorkout } = useWorkoutStore();  // Get addWorkout from store
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     try {
-      await axios.post('http://localhost:8000/workouts/', {
+      const response = await axios.post('http://localhost:8000/workouts/', {
         name,
         sets: parseInt(sets),
         reps: parseInt(reps),
       });
-      // Clear form
+      
+      addWorkout(response.data);  // Now this works
+      
       setName('');
       setSets('');
       setReps('');
