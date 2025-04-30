@@ -36,10 +36,18 @@ export const useWorkoutStore = create<WorkoutState>((set) => ({
   // Update fetchWorkouts to use axios
   fetchWorkouts: async () => {
     try {
-      const response = await axios.get('http://localhost:8000/workouts');
+      const response = await axios.get(
+  process.env.NEXT_PUBLIC_API_URL + '/workouts'
+);
       set({ workouts: response.data });
     } catch (error) {
       console.error('Fetch error:', error);
     }
   }
 }));
+
+
+
+
+
+

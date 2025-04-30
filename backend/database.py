@@ -5,7 +5,8 @@ from sqlalchemy import ForeignKey
 from datetime import datetime
 from sqlalchemy import DateTime
 
-SQLALCHEMY_DATABASE_URL = "sqlite:///./workouts.db"
+#SQLALCHEMY_DATABASE_URL = "sqlite:///./workouts.db"
+SQLALCHEMY_DATABASE_URL = "postgresql://postgres:Ivan-7430@db.xxxx.supabase.co:5432/postgres"
 
 engine = create_engine(SQLALCHEMY_DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
