@@ -1,27 +1,30 @@
 // frontend/pages/index.tsx
 import { useState, useEffect } from 'react';
 import axios from 'axios';
+import WorkoutForm from '../components/WorkoutForm';
 
 export default function Home() {
   const [workouts, setWorkouts] = useState([]);
 
+  // Fetch workouts on initial load
   useEffect(() => {
-    axios.get('http://localhost:8000/workouts')
-      .then(response => setWorkouts(response.data))
-      .catch(error => console.error(error));
+    fetchWorkouts();
   }, []);
+
+  const fetchWorkouts = async () => {
+    try {
+      const response = await axios.get('http://localhost:8000/workouts/');
+      setWorkouts(response.data);
+    } catch (error) {
+      console.error('Error fetching workouts:', error);
+    }
+  };
 
   return (
     <div className="container mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-4">Gym Tracker</h1>
-      <div>
-        {workouts.map(workout => (
-          <div key={workout.id} className="p-4 border rounded mb-2">
-            <h2 className="font-bold">{workout.name}</h2>
-            <p>{workout.sets} sets x {workout.reps} reps</p>
-          </div>
-        ))}
-      </div>
+      <h1 className="text-2xl font-bold mb-6">Gym Tracker</h1>
+      <WorkoutForm />
+      {/* Existing workout display code */}
     </div>
   );
 }
