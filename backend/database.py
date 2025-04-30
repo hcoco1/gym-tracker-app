@@ -1,4 +1,4 @@
-from sqlalchemy import create_engine, Column, Integer, String
+from sqlalchemy import create_engine, Column, Integer, String, Float
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from datetime import datetime
@@ -13,10 +13,13 @@ Base = declarative_base()
 
 class Workout(Base):
     __tablename__ = "workouts"
-
+    
     id = Column(Integer, primary_key=True, index=True)
-    name = Column(String, index=True)
-    sets = Column(Integer)
-    reps = Column(Integer)
-    created_at = Column(DateTime, default=datetime.utcnow)
+    exercise = Column(String, nullable=False)  # Changed from 'name'
+    sets = Column(Integer, nullable=False)
+    reps = Column(Integer, nullable=False)
+    weight = Column(Float, nullable=False)
+    exercise_type = Column(String, nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+
 

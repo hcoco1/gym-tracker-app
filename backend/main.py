@@ -27,11 +27,12 @@ def get_db():
         db.close()
 
 class WorkoutCreate(BaseModel):
-    name: str
+    exercise: str
     sets: int
     reps: int
-    
-# Add this response model
+    weight: float
+    exercise_type: str
+
 class WorkoutResponse(WorkoutCreate):
     id: int
     created_at: datetime
@@ -40,7 +41,7 @@ class WorkoutResponse(WorkoutCreate):
         orm_mode = True
 
 # Update your GET endpoint
-@app.get("/workouts/", response_model=List[WorkoutResponse])
+@app.get("/workouts", response_model=List[WorkoutResponse])
 def get_workouts(db: Session = Depends(get_db)):
     return db.query(Workout).all()
 

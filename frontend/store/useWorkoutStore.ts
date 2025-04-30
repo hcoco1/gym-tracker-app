@@ -3,9 +3,11 @@ import axios from 'axios';
 
 interface Workout {
   id: number;
-  name: string;
+  exercise: string;
   sets: number;
   reps: number;
+  weight: number;
+  exercise_type: string;
   created_at: string;
 }
 
