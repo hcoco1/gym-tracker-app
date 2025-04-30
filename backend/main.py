@@ -1,6 +1,6 @@
 from fastapi import FastAPI, HTTPException, Depends
-from sqlalchemy.orm import Session
-from database import SessionLocal, engine, Workout
+from sqlalchemy.orm import Session, joinedload
+from database import SessionLocal, engine, Workout, WorkoutSet, WorkoutRep
 from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
 from datetime import datetime
@@ -26,12 +26,18 @@ def get_db():
     finally:
         db.close()
 
+class RepCreate(BaseModel):
+    rep_number: int
+    weight: float
+
+class SetCreate(BaseModel):
+    set_number: int
+    reps: List[RepCreate]
+
 class WorkoutCreate(BaseModel):
     exercise: str
-    sets: int
-    reps: int
-    weight: float
     exercise_type: str
+    sets: List[SetCreate]
 
 class WorkoutResponse(WorkoutCreate):
     id: int
@@ -43,19 +49,31 @@ class WorkoutResponse(WorkoutCreate):
 # Update your GET endpoint
 @app.get("/workouts", response_model=List[WorkoutResponse])
 def get_workouts(db: Session = Depends(get_db)):
-    return db.query(Workout).all()
+    return db.query(Workout).options(
+        joinedload(Workout.sets).joinedload(WorkoutSet.reps)
+    ).all()
 
 @app.post("/workouts/")
 def create_workout(workout: WorkoutCreate, db: Session = Depends(get_db)):
-    db_workout = Workout(**workout.dict())
+    db_workout = Workout(
+        exercise=workout.exercise,
+        exercise_type=workout.exercise_type,
+        sets=[
+            WorkoutSet(
+                set_number=set_data.set_number,
+                reps=[
+                    WorkoutRep(
+                        rep_number=rep_data.rep_number,
+                        weight=rep_data.weight
+                    ) for rep_data in set_data.reps
+                ]
+            ) for set_data in workout.sets
+        ]
+    )
     db.add(db_workout)
     db.commit()
     db.refresh(db_workout)
     return db_workout
-
-@app.get("/workouts/")
-def get_workouts(db: Session = Depends(get_db)):
-    return db.query(Workout).all()
 
 @app.delete("/workouts/{workout_id}")
 def delete_workout(workout_id: int, db: Session = Depends(get_db)):

@@ -4,16 +4,22 @@ import axios from 'axios';
 interface Workout {
   id: number;
   exercise: string;
-  sets: number;
   reps: number;
   weight: number;
   exercise_type: string;
   created_at: string;
+  sets: Array<{
+    set_number: number;
+    reps: Array<{
+      rep_number: number;
+      weight: number;
+    }>;
+  }>;
 }
 
 interface WorkoutState {
   workouts: Workout[];
-  setWorkouts: (workouts: Workout[]) => void; // Add this
+  setWorkouts: (workouts: Workout[]) => void;
   addWorkout: (workout: Workout) => void;
   removeWorkout: (id: number) => void;
   fetchWorkouts: () => Promise<void>;
@@ -21,16 +27,16 @@ interface WorkoutState {
 
 export const useWorkoutStore = create<WorkoutState>((set) => ({
   workouts: [],
-  setWorkouts: (workouts) => set({ workouts }), // Add this
-  addWorkout: (workout) => 
-    set((state) => ({ workouts: [workout, ...state.workouts] })),
-  removeWorkout: (id) => 
-    set((state) => ({ workouts: state.workouts.filter(w => w.id !== id) })),
+  setWorkouts: (workouts: Workout[]) => set({ workouts }),
+  addWorkout: (workout: Workout) => 
+    set((state: WorkoutState) => ({ workouts: [workout, ...state.workouts] })),
+  removeWorkout: (id: number) => 
+    set((state: WorkoutState) => ({ workouts: state.workouts.filter((w: Workout) => w.id !== id) })),
 
   // Update fetchWorkouts to use axios
   fetchWorkouts: async () => {
     try {
-      const response = await axios.get('http://localhost:8000/workouts/');
+      const response = await axios.get('http://localhost:8000/workouts');
       set({ workouts: response.data });
     } catch (error) {
       console.error('Fetch error:', error);

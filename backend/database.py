@@ -1,6 +1,7 @@
 from sqlalchemy import create_engine, Column, Integer, String, Float
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import sessionmaker, relationship, registry
+from sqlalchemy import ForeignKey
 from datetime import datetime
 from sqlalchemy import DateTime
 
@@ -11,15 +12,33 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 Base = declarative_base()
 
+mapper_registry = registry()
+
+class WorkoutSet(Base):
+    __tablename__ = "workout_sets"
+    id = Column(Integer, primary_key=True)
+    workout_id = Column(Integer, ForeignKey('workouts.id'))
+    set_number = Column(Integer)
+    workout = relationship("Workout", back_populates="sets")  # Add this
+    reps = relationship("WorkoutRep", back_populates="set")
+
+class WorkoutRep(Base):
+    __tablename__ = "workout_reps"
+    id = Column(Integer, primary_key=True)
+    set_id = Column(Integer, ForeignKey('workout_sets.id'))
+    rep_number = Column(Integer)
+    weight = Column(Float)
+    set = relationship("WorkoutSet", back_populates="reps")  # Add back_populates
+
 class Workout(Base):
     __tablename__ = "workouts"
-    
-    id = Column(Integer, primary_key=True, index=True)
-    exercise = Column(String, nullable=False)  # Changed from 'name'
-    sets = Column(Integer, nullable=False)
-    reps = Column(Integer, nullable=False)
-    weight = Column(Float, nullable=False)
-    exercise_type = Column(String, nullable=False)
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    id = Column(Integer, primary_key=True)
+    exercise = Column(String)
+    exercise_type = Column(String)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    sets = relationship("WorkoutSet", back_populates="workout", cascade="all, delete-orphan")  # Add cascade
+
+# Configure relationships after all models are defined
+mapper_registry.configure()
 
 
