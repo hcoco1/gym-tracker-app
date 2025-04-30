@@ -21,6 +21,17 @@ export default function Home() {
     }
   };
 
+    // ADD THIS FUNCTION
+    const handleDelete = async (workoutId: number) => {
+      try {
+        await axios.delete(`http://localhost:8000/workouts/${workoutId}`);
+        fetchWorkouts(); // Refresh the list
+      } catch (error) {
+        console.error('Delete error:', error);
+        alert('Failed to delete workout');
+      }
+    };
+
   return (
     <div className="min-h-screen bg-gray-100">
       <Navbar />
@@ -60,21 +71,23 @@ export default function Home() {
               {/* Workouts Grid */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {workouts.map(workout => (
-                  <div key={workout.id} className="p-4 border rounded-lg hover:shadow-lg transition-shadow">
-                    <div className="flex justify-between items-start mb-2">
+                  
+                  <div key={workout.id} className="p-4 border rounded-lg mb-4">
+                  <div className="flex justify-between items-center"> {/* Changed to items-center */}
+                    <div>
                       <h3 className="font-bold text-lg">{workout.name}</h3>
-                      <span className="text-sm text-gray-500">
-                        {new Date(workout.created_at).toLocaleDateString()}
-                      </span>
+                      <p className="text-gray-600">
+                        {workout.sets} sets x {workout.reps} reps
+                      </p>
                     </div>
-                    <div className="flex space-x-4 text-gray-600">
-                      <div>
-                        <span className="font-semibold">{workout.sets}</span> sets
-                      </div>
-                      <div>
-                        <span className="font-semibold">{workout.reps}</span> reps
-                      </div>
-                    </div>
+                    {/* ADD THIS BUTTON */}
+                    <button 
+                      onClick={() => handleDelete(workout.id)}
+                      className="text-red-500 hover:text-red-700 px-3 py-1 rounded"
+                    >
+                      Delete
+                    </button>
+                  </div>
                   </div>
                 ))}
               </div>
