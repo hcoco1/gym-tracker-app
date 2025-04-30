@@ -1,6 +1,8 @@
 from sqlalchemy import create_engine, Column, Integer, String
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
+from datetime import datetime
+from sqlalchemy import DateTime
 
 SQLALCHEMY_DATABASE_URL = "sqlite:///./workouts.db"
 
@@ -16,6 +18,5 @@ class Workout(Base):
     name = Column(String, index=True)
     sets = Column(Integer)
     reps = Column(Integer)
+    created_at = Column(DateTime, default=datetime.utcnow)
 
-# Create tables
-Base.metadata.create_all(bind=engine)

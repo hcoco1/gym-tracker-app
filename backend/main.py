@@ -3,6 +3,8 @@ from sqlalchemy.orm import Session
 from database import SessionLocal, engine, Workout
 from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
+from datetime import datetime
+from typing import List
 
 
 app = FastAPI()
@@ -28,6 +30,19 @@ class WorkoutCreate(BaseModel):
     name: str
     sets: int
     reps: int
+    
+# Add this response model
+class WorkoutResponse(WorkoutCreate):
+    id: int
+    created_at: datetime
+
+    class Config:
+        orm_mode = True
+
+# Update your GET endpoint
+@app.get("/workouts/", response_model=List[WorkoutResponse])
+def get_workouts(db: Session = Depends(get_db)):
+    return db.query(Workout).all()
 
 @app.post("/workouts/")
 def create_workout(workout: WorkoutCreate, db: Session = Depends(get_db)):
