@@ -22,7 +22,7 @@ export default function WorkoutForm() {
   const [exerciseType, setExerciseType] = useState<keyof typeof exercisesByType>('push');
   const [selectedExercise, setSelectedExercise] = useState('');
   const [sets, setSets] = useState<SetData[]>([{ reps: [{ weight: '' }] }]);
-  const { addWorkout } = useWorkoutStore();
+  const { fetchWorkouts } = useWorkoutStore();
 
   const handleSetAdd = () => {
     setSets(prev => [...prev, { reps: [{ weight: '' }] }]);
@@ -48,8 +48,7 @@ export default function WorkoutForm() {
     e.preventDefault();
     
     try {
-      const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/workouts/`, {
-
+      await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/workouts/`, {
         exercise: selectedExercise,
         exercise_type: exerciseType,
         sets: sets.map((set, setIndex) => ({
@@ -61,7 +60,9 @@ export default function WorkoutForm() {
         }))
       });
 
-      addWorkout(response.data);
+      await fetchWorkouts(); // ✅ Refetch the latest workouts from the backend
+
+      // Reset form
       setSets([{ reps: [{ weight: '' }] }]);
       setSelectedExercise('');
     } catch (error) {
@@ -74,7 +75,6 @@ export default function WorkoutForm() {
       <h2 className="text-2xl font-bold mb-6 text-gray-800">Log New Workout</h2>
       
       <div className="space-y-4">
-        {/* Exercise Selection */}
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Workout Type</label>
@@ -86,11 +86,9 @@ export default function WorkoutForm() {
               }}
               className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500"
             >
-              <option value="push">Push</option>
-              <option value="pull">Pull</option>
-              <option value="legs">Legs</option>
-              <option value="core">Core</option>
-              <option value="cardio">Cardio</option>
+              {Object.keys(exercisesByType).map((type) => (
+                <option key={type} value={type}>{type}</option>
+              ))}
             </select>
           </div>
 
@@ -110,7 +108,6 @@ export default function WorkoutForm() {
           </div>
         </div>
 
-        {/* Sets and Reps */}
         <div className="space-y-6">
           {sets.map((set, setIndex) => (
             <div key={setIndex} className="border p-4 rounded-lg bg-gray-50">
@@ -144,7 +141,6 @@ export default function WorkoutForm() {
           ))}
         </div>
 
-        {/* Form Actions */}
         <div className="flex gap-3">
           <button
             type="button"

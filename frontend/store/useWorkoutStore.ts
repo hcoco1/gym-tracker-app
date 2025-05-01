@@ -1,20 +1,22 @@
 import { create } from 'zustand';
 import axios from 'axios';
 
-interface Workout {
+interface Rep {
+  rep_number: number;
+  weight: number;
+}
+
+interface Set {
+  set_number: number;
+  reps: Rep[];
+}
+
+export interface Workout {
   id: number;
   exercise: string;
-  reps: number;
-  weight: number;
   exercise_type: string;
   created_at: string;
-  sets: Array<{
-    set_number: number;
-    reps: Array<{
-      rep_number: number;
-      weight: number;
-    }>;
-  }>;
+  sets: Set[];
 }
 
 interface WorkoutState {
@@ -27,27 +29,23 @@ interface WorkoutState {
 
 export const useWorkoutStore = create<WorkoutState>((set) => ({
   workouts: [],
-  setWorkouts: (workouts: Workout[]) => set({ workouts }),
-  addWorkout: (workout: Workout) => 
-    set((state: WorkoutState) => ({ workouts: [workout, ...state.workouts] })),
-  removeWorkout: (id: number) => 
-    set((state: WorkoutState) => ({ workouts: state.workouts.filter((w: Workout) => w.id !== id) })),
 
-  // Update fetchWorkouts to use axios
+  setWorkouts: (workouts: Workout[]) => set({ workouts }),
+
+  addWorkout: (workout: Workout) =>
+    set((state) => ({ workouts: [workout, ...state.workouts] })),
+
+  removeWorkout: (id: number) =>
+    set((state) => ({
+      workouts: state.workouts.filter((w) => w.id !== id),
+    })),
+
   fetchWorkouts: async () => {
     try {
-      const response = await axios.get(
-  process.env.NEXT_PUBLIC_API_URL + '/workouts'
-);
+      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/workouts`);
       set({ workouts: response.data });
     } catch (error) {
       console.error('Fetch error:', error);
     }
-  }
+  },
 }));
-
-
-
-
-
-
