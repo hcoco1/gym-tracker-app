@@ -5,7 +5,7 @@ import WorkoutForm from '../components/WorkoutForm';
 import Navbar from '../components/Navbar';
 
 export default function Home() {
-  const { workouts, fetchWorkouts, removeWorkout } = useWorkoutStore();
+  const { workouts, fetchWorkouts } = useWorkoutStore();
 
   useEffect(() => {
     fetchWorkouts();
@@ -14,19 +14,17 @@ export default function Home() {
   const handleDelete = async (id: number) => {
     try {
       {/* await axios.delete(`http://localhost:8000/workouts/${id}`);*/}
-      await axios.delete(`https://gym-tracker-fastapi.onrender.com/workouts/${id}`);
-      removeWorkout(id); // Update Zustand store
-    } catch (error) {
-      // Log the actual error object and its properties
-      console.error("Delete error:", error);
-      // Optionally log the specific error response if available
-      if (axios.isAxiosError(error)) {
-        console.error("Error message:", error.message);
-        if (error.response) {
-          console.error("Response data:", error.response.data);
+      try {
+        await axios.delete(`https://gym-tracker-fastapi.onrender.com/workouts/${id}`);
+      } catch (error) {
+        if (axios.isAxiosError(error)) {
+          console.error("Full error object:", error.toJSON());
+        } else {
+          console.error("Unexpected error:", error);
         }
       }
-      alert('Failed to delete workout');
+    } catch (error) {
+      console.error("Error in handleDelete:", error);
     }
   };
   

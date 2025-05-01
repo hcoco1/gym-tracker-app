@@ -18,7 +18,7 @@ origins = [origin.strip() for origin in origins if origin.strip()]
 # Add CORS middleware - REMOVE THE MANUAL OPTIONS HANDLER
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=["*"],  # Temporary wildcard
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -53,6 +53,10 @@ class WorkoutResponse(WorkoutCreate):
     created_at: datetime
     class Config:
         orm_mode = True
+        
+@app.get("/test-cors")
+def test_endpoint():
+    return {"message": "CORS working"}
 
 @app.get("/workouts", response_model=List[WorkoutResponse])
 def get_workouts(db: Session = Depends(get_db)):
