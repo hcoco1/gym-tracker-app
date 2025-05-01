@@ -14,23 +14,21 @@ export default function Home() {
   const handleDelete = async (id: number) => {
     try {
       await axios.delete(`https://gym-tracker-fastapi.onrender.com/workouts/${id}`);
-      removeWorkout(id);
+      removeWorkout(id); // Update Zustand store
     } catch (error) {
-      console.error('Delete error:', error);
+      // Log the actual error object and its properties
+      console.error("Delete error:", error);
+      // Optionally log the specific error response if available
+      if (axios.isAxiosError(error)) {
+        console.error("Error message:", error.message);
+        if (error.response) {
+          console.error("Response data:", error.response.data);
+        }
+      }
       alert('Failed to delete workout');
     }
   };
-
-  if (!Array.isArray(workouts)) {
-    return (
-      <div className="min-h-screen bg-gray-100">
-        <Navbar />
-        <main className="container mx-auto p-4 text-center text-gray-700">
-          Loading workouts...
-        </main>
-      </div>
-    );
-  }
+  
 
   const totalSets = workouts.reduce((sum, workout) => sum + (workout.sets?.length || 0), 0);
   const totalReps = workouts.reduce((sum, workout) =>
