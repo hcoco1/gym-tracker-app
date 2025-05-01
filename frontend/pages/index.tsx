@@ -13,20 +13,18 @@ export default function Home() {
 
   const handleDelete = async (id: number) => {
     try {
-      {/* await axios.delete(`http://localhost:8000/workouts/${id}`);*/}
-      try {
-        await axios.delete(`${process.env.NEXT_PUBLIC_API_URL}/workouts/${id}`);
-      } catch (error) {
-        if (axios.isAxiosError(error)) {
-          console.error("Full error object:", error.toJSON());
-        } else {
-          console.error("Unexpected error:", error);
-        }
-      }
+      await axios.delete(`${process.env.NEXT_PUBLIC_API_URL}/workouts/${id}`);
+      // Remove from local store
+      useWorkoutStore.getState().removeWorkout(id);
     } catch (error) {
-      console.error("Error in handleDelete:", error);
+      if (axios.isAxiosError(error)) {
+        console.error("Full error object:", error.toJSON());
+      } else {
+        console.error("Unexpected error:", error);
+      }
     }
   };
+  
   
 
   const totalSets = workouts.reduce((sum, workout) => sum + (workout.sets?.length || 0), 0);
