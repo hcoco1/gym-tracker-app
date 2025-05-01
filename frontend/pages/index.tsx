@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { useWorkoutStore } from '../store/useWorkoutStore';
 import axios from 'axios';
 import WorkoutForm from '../components/WorkoutForm';
+import WorkoutTable from '../components/WorkoutTable';
 import Navbar from '../components/Navbar';
 
 export default function Home() {
@@ -59,46 +60,10 @@ export default function Home() {
                   <p className="text-2xl font-bold">{totalVolume}kg</p>
                 </div>
               </div>
+              <WorkoutTable workouts={workouts} onDelete={handleDelete} />
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {workouts.map((workout) => (
-                  <div key={workout.id} className="p-4 border rounded-lg hover:shadow-lg transition-shadow">
-                    <div className="flex justify-between items-start mb-3">
-                      <div>
-                        <h3 className="font-bold text-lg">{workout.exercise}</h3>
-                        <p className="text-sm text-gray-500">
-                          {new Date(workout.created_at).toLocaleDateString()}
-                        </p>
-                        <span className="inline-block mt-1 px-2 py-1 text-xs font-medium text-blue-600 bg-blue-100 rounded">
-                          {workout.exercise_type?.toUpperCase()}
-                        </span>
-                      </div>
-                      <button
-                        onClick={() => handleDelete(workout.id)}
-                        className="text-red-500 hover:text-red-700 px-3 py-1 rounded"
-                      >
-                        Delete
-                      </button>
-                    </div>
 
-                    <div className="space-y-2">
-                      {workout.sets?.map((set, setIndex) => (
-                        <div key={setIndex} className="text-sm border-l-2 border-blue-200 pl-2">
-                          <div className="font-medium text-gray-700">Set {set.set_number}</div>
-                          <div className="grid grid-cols-3 gap-2 mt-1">
-                            {set.reps?.map((rep, repIndex) => (
-                              <div key={repIndex} className="text-gray-600">
-                                Rep {rep.rep_number}:{" "}
-                                <span className="text-gray-800 font-medium">{rep.weight}kg</span>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
+
             </div>
           </div>
         </div>
