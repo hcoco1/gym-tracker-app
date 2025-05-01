@@ -6,7 +6,7 @@ import WorkoutTable from '../components/WorkoutTable';
 import Navbar from '../components/Navbar';
 
 export default function Home() {
-  const { workouts, fetchWorkouts, loading } = useWorkoutStore();
+  const { workouts, fetchWorkouts } = useWorkoutStore();
 
   // Fetch workouts when the component mounts
   useEffect(() => {
@@ -28,10 +28,7 @@ export default function Home() {
     }
   };
 
-  // Show a loading indicator while workouts are being fetched
-  if (loading) {
-    return <div className="flex justify-center items-center h-screen">Loading...</div>;
-  }
+
 
   return (
     <div className="min-h-screen bg-gray-100">

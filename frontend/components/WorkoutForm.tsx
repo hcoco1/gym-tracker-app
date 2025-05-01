@@ -10,36 +10,31 @@ const exercisesByType = {
   cardio: ["Cycling", "Treadmill", "Swimming"]
 };
 
-interface RepData {
-  weight: string;
-}
-
 interface SetData {
-  reps: RepData[];
+  weight: string;
+  reps: string;
 }
 
 export default function WorkoutForm() {
   const [exerciseType, setExerciseType] = useState<keyof typeof exercisesByType>('push');
   const [selectedExercise, setSelectedExercise] = useState('');
-  const [sets, setSets] = useState<SetData[]>([{ reps: [{ weight: '' }] }]);
+  const [sets, setSets] = useState<SetData[]>([{ weight: '', reps: '' }]);
   const { fetchWorkouts } = useWorkoutStore();
 
   const handleSetAdd = () => {
-    setSets(prev => [...prev, { reps: [{ weight: '' }] }]);
+    setSets(prev => [...prev, { weight: '', reps: '' }]);
   };
 
-  const handleRepAdd = (setIndex: number) => {
-    setSets(prev => {
-      const newSets = [...prev];
-      newSets[setIndex].reps.push({ weight: '' });
-      return newSets;
-    });
+  const handleSetRemove = (index: number) => {
+    if (sets.length > 1) {
+      setSets(prev => prev.filter((_, i) => i !== index));
+    }
   };
 
-  const handleWeightChange = (setIndex: number, repIndex: number, value: string) => {
+  const handleSetChange = (index: number, field: keyof SetData, value: string) => {
     setSets(prev => {
       const newSets = [...prev];
-      newSets[setIndex].reps[repIndex].weight = value;
+      newSets[index] = { ...newSets[index], [field]: value };
       return newSets;
     });
   };
@@ -47,26 +42,28 @@ export default function WorkoutForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    if (!selectedExercise) {
+      alert('Please select an exercise');
+      return;
+    }
+
     try {
       await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/workouts/`, {
         exercise: selectedExercise,
         exercise_type: exerciseType,
-        sets: sets.map((set, setIndex) => ({
-          set_number: setIndex + 1,
-          reps: set.reps.map((rep, repIndex) => ({
-            rep_number: repIndex + 1,
-            weight: parseFloat(rep.weight) || 0
-          }))
+        sets: sets.map((set, index) => ({
+          set_number: index + 1,
+          weight: parseFloat(set.weight) || 0,
+          reps: parseInt(set.reps) || 0
         }))
       });
 
-      await fetchWorkouts(); // ✅ Refetch the latest workouts from the backend
-
-      // Reset form
-      setSets([{ reps: [{ weight: '' }] }]);
+      await fetchWorkouts();
+      setSets([{ weight: '', reps: '' }]);
       setSelectedExercise('');
     } catch (error) {
       console.error('Error creating workout:', error);
+      alert('Failed to save workout. Please try again.');
     }
   };
 
@@ -87,7 +84,7 @@ export default function WorkoutForm() {
               className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500"
             >
               {Object.keys(exercisesByType).map((type) => (
-                <option key={type} value={type}>{type}</option>
+                <option key={type} value={type}>{type.charAt(0).toUpperCase() + type.slice(1)}</option>
               ))}
             </select>
           </div>
@@ -108,34 +105,46 @@ export default function WorkoutForm() {
           </div>
         </div>
 
-        <div className="space-y-6">
+        <div className="space-y-4">
           {sets.map((set, setIndex) => (
             <div key={setIndex} className="border p-4 rounded-lg bg-gray-50">
               <div className="flex justify-between items-center mb-3">
                 <h3 className="font-medium text-gray-700">Set {setIndex + 1}</h3>
-                <button
-                  type="button"
-                  onClick={() => handleRepAdd(setIndex)}
-                  className="text-sm bg-blue-100 text-blue-600 px-2 py-1 rounded hover:bg-blue-200"
-                >
-                  Add Rep +
-                </button>
+                {sets.length > 1 && (
+                  <button
+                    type="button"
+                    onClick={() => handleSetRemove(setIndex)}
+                    className="text-sm bg-red-100 text-red-600 px-2 py-1 rounded hover:bg-red-200"
+                  >
+                    Remove
+                  </button>
+                )}
               </div>
               
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                {set.reps.map((rep, repIndex) => (
-                  <div key={repIndex} className="space-y-1">
-                    <label className="text-sm text-gray-600">Rep {repIndex + 1} Weight (kg)</label>
-                    <input
-                      type="number"
-                      step="0.5"
-                      value={rep.weight}
-                      onChange={(e) => handleWeightChange(setIndex, repIndex, e.target.value)}
-                      className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500"
-                      required
-                    />
-                  </div>
-                ))}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm text-gray-600 mb-1">Weight (kg)</label>
+                  <input
+                    type="number"
+                    step="0.5"
+                    min="0"
+                    value={set.weight}
+                    onChange={(e) => handleSetChange(setIndex, 'weight', e.target.value)}
+                    className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm text-gray-600 mb-1">Reps</label>
+                  <input
+                    type="number"
+                    min="1"
+                    value={set.reps}
+                    onChange={(e) => handleSetChange(setIndex, 'reps', e.target.value)}
+                    className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500"
+                    required
+                  />
+                </div>
               </div>
             </div>
           ))}
