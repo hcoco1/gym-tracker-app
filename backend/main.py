@@ -8,24 +8,23 @@ from datetime import datetime
 from pydantic import BaseModel
 from database import SessionLocal, engine, Workout, WorkoutSet, WorkoutRep
 
+
 app = FastAPI()
 
-# ✅ Read CORS origins from environment
+# Read CORS origins from environment
 origins = os.getenv("CORS_ORIGINS", "").split(",")
 origins = [origin.strip() for origin in origins if origin.strip()]
 
+# Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:3000",
-        "https://gym-tracker-app-nqup.vercel.app"
-    ],
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# ✅ Catch-all for preflight requests (OPTIONS)
+# Catch-all for OPTIONS preflight
 @app.options("/{full_path:path}")
 def preflight_handler(full_path: str):
     response = Response()
@@ -33,6 +32,7 @@ def preflight_handler(full_path: str):
     response.headers["Access-Control-Allow-Methods"] = "GET, POST, DELETE, OPTIONS"
     response.headers["Access-Control-Allow-Headers"] = "*"
     return response
+
 
 # Dependency
 def get_db():
