@@ -10,33 +10,25 @@ const exercisesByType = {
   cardio: ["Cycling", "Treadmill", "Swimming"]
 };
 
-interface RepData {
+interface SimpleSet {
+  reps: number;
   weight: number;
-  rep_number: number;
-}
-
-interface SetData {
-  reps: RepData[];
 }
 
 export default function WorkoutForm() {
   const [exerciseType, setExerciseType] = useState<keyof typeof exercisesByType>('push');
   const [selectedExercise, setSelectedExercise] = useState('');
-  const [sets, setSets] = useState<SetData[]>([{ 
-    reps: Array(3).fill(null).map((_, i) => ({ 
-      weight: 0, 
-      rep_number: i + 1 
-    })) 
-  }]);
+  const [sets, setSets] = useState<SimpleSet[]>([{ reps: 0, weight: 0 }]);
   const { fetchWorkouts } = useWorkoutStore();
 
+  const handleSetChange = (index: number, field: 'reps' | 'weight', value: string) => {
+    const newSets = [...sets];
+    newSets[index][field] = parseFloat(value) || 0;
+    setSets(newSets);
+  };
+
   const handleSetAdd = () => {
-    setSets(prev => [...prev, { 
-      reps: Array(3).fill(null).map((_, i) => ({ 
-        weight: 0, 
-        rep_number: i + 1 
-      })) 
-    }]);
+    setSets(prev => [...prev, { reps: 0, weight: 0 }]);
   };
 
   const handleSetRemove = (index: number) => {
@@ -45,56 +37,38 @@ export default function WorkoutForm() {
     }
   };
 
-  const handleWeightChange = (setIndex: number, repIndex: number, value: string) => {
-    setSets(prev => {
-      const newSets = [...prev];
-      newSets[setIndex].reps[repIndex].weight = parseFloat(value) || 0;
-      return newSets;
-    });
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!selectedExercise) {
       alert('Please select an exercise');
       return;
     }
 
-    try {
-      const payload = {
-        exercise: selectedExercise,
-        exercise_type: exerciseType,
-        sets: sets.map((set, setIndex) => ({
-          set_number: setIndex + 1,
-          reps: set.reps.map(rep => ({
-            rep_number: rep.rep_number,
-            weight: rep.weight
-          }))
-        }))
-      };
-
-      console.log('Sending payload:', payload);
-
-      await axios.post(
-        `${process.env.NEXT_PUBLIC_API_URL}/workouts/`,
-        payload,
-        {
-          headers: {
-            'Content-Type': 'application/json'
+    const payload = {
+      exercise: selectedExercise,
+      exercise_type: exerciseType,
+      sets: sets.map((set, idx) => ({
+        set_number: idx + 1,
+        reps: [
+          {
+            rep_number: set.reps,
+            weight: set.weight,
           }
+        ]
+      }))
+    };
+
+    try {
+      await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/workouts/`, payload, {
+        headers: {
+          'Content-Type': 'application/json'
         }
-      );
+      });
 
       await fetchWorkouts();
-      setSets([{ 
-        reps: Array(3).fill(null).map((_, i) => ({ 
-          weight: 0, 
-          rep_number: i + 1 
-        })) 
-      }]);
+      setSets([{ reps: 0, weight: 0 }]);
       setSelectedExercise('');
-      
     } catch (error) {
       if (axios.isAxiosError(error)) {
         console.error('Error details:', error.response?.data);
@@ -109,91 +83,99 @@ export default function WorkoutForm() {
   return (
     <form onSubmit={handleSubmit} className="mb-8 p-4 border rounded-lg bg-white shadow-sm">
       <h2 className="text-2xl font-bold mb-6 text-gray-800">Log New Workout</h2>
-      
-      <div className="space-y-4">
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Workout Type</label>
-            <select
-              value={exerciseType}
-              onChange={(e) => {
-                setExerciseType(e.target.value as keyof typeof exercisesByType);
-                setSelectedExercise('');
-              }}
-              className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500"
-            >
-              {Object.keys(exercisesByType).map((type) => (
-                <option key={type} value={type}>{type.charAt(0).toUpperCase() + type.slice(1)}</option>
-              ))}
-            </select>
-          </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Exercise</label>
-            <select
-              value={selectedExercise}
-              onChange={(e) => setSelectedExercise(e.target.value)}
-              className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500"
-              required
-            >
-              <option value="">Select Exercise</option>
-              {exercisesByType[exerciseType].map((exercise) => (
-                <option key={exercise} value={exercise}>{exercise}</option>
-              ))}
-            </select>
-          </div>
+      <div className="grid grid-cols-2 gap-4 mb-4">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Workout Type</label>
+          <select
+            value={exerciseType}
+            onChange={(e) => {
+              setExerciseType(e.target.value as keyof typeof exercisesByType);
+              setSelectedExercise('');
+            }}
+            className="w-full p-2 border rounded-md"
+          >
+            {Object.keys(exercisesByType).map((type) => (
+              <option key={type} value={type}>
+                {type.charAt(0).toUpperCase() + type.slice(1)}
+              </option>
+            ))}
+          </select>
         </div>
 
-        <div className="space-y-4">
-          {sets.map((set, setIndex) => (
-            <div key={setIndex} className="border p-4 rounded-lg bg-gray-50">
-              <div className="flex justify-between items-center mb-3">
-                <h3 className="font-medium text-gray-700">Set {setIndex + 1}</h3>
-                {sets.length > 1 && (
-                  <button
-                    type="button"
-                    onClick={() => handleSetRemove(setIndex)}
-                    className="text-sm bg-red-100 text-red-600 px-2 py-1 rounded hover:bg-red-200"
-                  >
-                    Remove Set
-                  </button>
-                )}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Exercise</label>
+          <select
+            value={selectedExercise}
+            onChange={(e) => setSelectedExercise(e.target.value)}
+            className="w-full p-2 border rounded-md"
+            required
+          >
+            <option value="">Select Exercise</option>
+            {exercisesByType[exerciseType].map((exercise) => (
+              <option key={exercise} value={exercise}>{exercise}</option>
+            ))}
+          </select>
+        </div>
+      </div>
+
+      <div className="space-y-4">
+        {sets.map((set, index) => (
+          <div key={index} className="bg-gray-50 p-4 rounded-lg border">
+            <div className="flex justify-between items-center mb-3">
+              <h3 className="font-medium">Set {index + 1}</h3>
+              {sets.length > 1 && (
+                <button
+                  type="button"
+                  onClick={() => handleSetRemove(index)}
+                  className="text-sm bg-red-100 text-red-600 px-2 py-1 rounded hover:bg-red-200"
+                >
+                  Remove Set
+                </button>
+              )}
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm text-gray-600 mb-1">Reps</label>
+                <input
+                  type="number"
+                  min="1"
+                  value={set.reps}
+                  onChange={(e) => handleSetChange(index, 'reps', e.target.value)}
+                  className="w-full p-2 border rounded-md"
+                  required
+                />
               </div>
-              
-              <div className="grid grid-cols-3 gap-3">
-                {set.reps.map((rep, repIndex) => (
-                  <div key={repIndex} className="space-y-1">
-                    <label className="block text-xs text-gray-600">Rep {rep.rep_number}</label>
-                    <input
-                      type="number"
-                      step="0.5"
-                      min="0"
-                      value={rep.weight || ''}
-                      onChange={(e) => handleWeightChange(setIndex, repIndex, e.target.value)}
-                      className="w-full p-2 border rounded-md focus:ring-1 focus:ring-blue-500 text-sm"
-                    />
-                  </div>
-                ))}
+              <div>
+                <label className="block text-sm text-gray-600 mb-1">Weight (lbs)</label>
+                <input
+                  type="number"
+                  min="0"
+                  step="0.5"
+                  value={set.weight}
+                  onChange={(e) => handleSetChange(index, 'weight', e.target.value)}
+                  className="w-full p-2 border rounded-md"
+                />
               </div>
             </div>
-          ))}
-        </div>
+          </div>
+        ))}
+      </div>
 
-        <div className="flex gap-3">
-          <button
-            type="button"
-            onClick={handleSetAdd}
-            className="px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200"
-          >
-            Add Set +
-          </button>
-          <button
-            type="submit"
-            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-          >
-            Save Workout
-          </button>
-        </div>
+      <div className="flex gap-3 mt-4">
+        <button
+          type="button"
+          onClick={handleSetAdd}
+          className="px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200"
+        >
+          Add Set +
+        </button>
+        <button
+          type="submit"
+          className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+        >
+          Save Workout
+        </button>
       </div>
     </form>
   );
