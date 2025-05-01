@@ -74,7 +74,7 @@ export default function WorkoutForm() {
       // Debugging: Log the payload
       console.log('Request payload:', JSON.stringify(payload, null, 2));
   
-      const response = await axios.post(
+      await axios.post(
         `${process.env.NEXT_PUBLIC_API_URL}/workouts/`,
         payload,
         {
