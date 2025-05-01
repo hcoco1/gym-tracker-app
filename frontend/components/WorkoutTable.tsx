@@ -1,13 +1,19 @@
+'use client';
+
 import {
   ColumnDef,
   flexRender,
   getCoreRowModel,
   useReactTable,
-} from "@tanstack/react-table";
-import { format } from "date-fns";
-import { Workout } from '../types/types';
+} from '@tanstack/react-table';
+import { useMemo } from 'react';
 
-import { useMemo } from "react";
+export interface Workout {
+  id: number;
+  exercise: string;
+  exercise_type: string;
+  created_at: string;
+}
 
 interface WorkoutTableProps {
   workouts: Workout[];
@@ -18,35 +24,26 @@ export default function WorkoutTable({ workouts, onDelete }: WorkoutTableProps) 
   const columns = useMemo<ColumnDef<Workout>[]>(
     () => [
       {
-        header: "Exercise",
-        accessorKey: "exercise",
+        header: 'Exercise',
+        accessorKey: 'exercise',
       },
       {
-        header: "Type",
-        accessorKey: "exercise_type",
-        cell: ({ row }) => (
-          <span className="uppercase text-sm text-blue-600">
-            {row.original.exercise_type}
-          </span>
-        ),
+        header: 'Type',
+        accessorKey: 'exercise_type',
+        cell: (info) => (info.getValue() as string)?.toUpperCase(),
       },
       {
-        header: "Date",
-        accessorKey: "created_at",
-        cell: ({ row }) =>
-          format(new Date(row.original.created_at), "MMM dd, yyyy HH:mm"),
+        header: 'Date',
+        accessorKey: 'created_at',
+        cell: (info) =>
+          new Date(info.getValue() as string).toLocaleDateString(),
       },
       {
-        header: "Sets",
-        accessorKey: "sets",
-        cell: ({ row }) => row.original.sets?.length || 0,
-      },
-      {
-        header: "Actions",
+        header: 'Actions',
         cell: ({ row }) => (
           <button
+            className="text-red-500 hover:underline"
             onClick={() => onDelete(row.original.id)}
-            className="text-red-500 hover:text-red-700 text-sm font-medium"
           >
             Delete
           </button>
@@ -64,26 +61,24 @@ export default function WorkoutTable({ workouts, onDelete }: WorkoutTableProps) 
 
   return (
     <div className="overflow-x-auto">
-      <table className="min-w-full bg-white shadow rounded-lg text-sm">
-        <thead>
+      <table className="min-w-full border border-gray-200 text-sm">
+        <thead className="bg-gray-100 text-left">
           {table.getHeaderGroups().map((headerGroup) => (
-            <tr key={headerGroup.id} className="bg-gray-100">
+            <tr key={headerGroup.id}>
               {headerGroup.headers.map((header) => (
-                <th
-                  key={header.id}
-                  className="text-left px-4 py-2 font-medium text-gray-600"
-                >
+                <th key={header.id} className="p-3 border-b font-medium">
                   {flexRender(header.column.columnDef.header, header.getContext())}
                 </th>
               ))}
             </tr>
           ))}
         </thead>
+
         <tbody>
           {table.getRowModel().rows.map((row) => (
-            <tr key={row.id} className="border-b hover:bg-gray-50">
+            <tr key={row.id} className="hover:bg-gray-50">
               {row.getVisibleCells().map((cell) => (
-                <td key={cell.id} className="px-4 py-2 text-gray-800">
+                <td key={cell.id} className="p-3 border-b">
                   {flexRender(cell.column.columnDef.cell, cell.getContext())}
                 </td>
               ))}
