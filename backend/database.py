@@ -1,27 +1,44 @@
-from sqlalchemy import create_engine, Column, Integer, String, Float
+from sqlalchemy import create_engine, Column, Integer, String, Float, ForeignKey, DateTime
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker, relationship, registry
-from sqlalchemy import ForeignKey
+from sqlalchemy.orm import sessionmaker, relationship
 from datetime import datetime
-from sqlalchemy import DateTime
+from dotenv import load_dotenv
+import os
 
-#SQLALCHEMY_DATABASE_URL = "sqlite:///./workouts.db"
-SQLALCHEMY_DATABASE_URL = "postgresql://postgres:Ivan-7430@db.xxxx.supabase.co:5432/postgres"
+# Load environment variables from .env
+load_dotenv()
 
+# Fetch variables
+USER = os.getenv("DB_USER")
+PASSWORD = os.getenv("DB_PASSWORD")
+HOST = os.getenv("DB_HOST")
+PORT = os.getenv("DB_PORT")
+DBNAME = os.getenv("DB_NAME")
+
+# PostgreSQL connection URL
+SQLALCHEMY_DATABASE_URL = f"postgresql+psycopg2://{USER}:{PASSWORD}@{HOST}:{PORT}/{DBNAME}?sslmode=require"
+
+# SQLAlchemy setup
 engine = create_engine(SQLALCHEMY_DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-
 Base = declarative_base()
 
-mapper_registry = registry()
+# Models
+class Workout(Base):
+    __tablename__ = "workouts"
+    id = Column(Integer, primary_key=True)
+    exercise = Column(String)
+    exercise_type = Column(String)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    sets = relationship("WorkoutSet", back_populates="workout", cascade="all, delete-orphan")
 
 class WorkoutSet(Base):
     __tablename__ = "workout_sets"
     id = Column(Integer, primary_key=True)
     workout_id = Column(Integer, ForeignKey('workouts.id'))
     set_number = Column(Integer)
-    workout = relationship("Workout", back_populates="sets")  # Add this
-    reps = relationship("WorkoutRep", back_populates="set")
+    workout = relationship("Workout", back_populates="sets")
+    reps = relationship("WorkoutRep", back_populates="set", cascade="all, delete-orphan")
 
 class WorkoutRep(Base):
     __tablename__ = "workout_reps"
@@ -29,17 +46,19 @@ class WorkoutRep(Base):
     set_id = Column(Integer, ForeignKey('workout_sets.id'))
     rep_number = Column(Integer)
     weight = Column(Float)
-    set = relationship("WorkoutSet", back_populates="reps")  # Add back_populates
+    set = relationship("WorkoutSet", back_populates="reps")
+    
+    
+    if __name__ == "__main__":
+        # This will create all tables in the database
+        Base.metadata.create_all(bind=engine)
+        print("Tables created successfully.")
 
-class Workout(Base):
-    __tablename__ = "workouts"
-    id = Column(Integer, primary_key=True)
-    exercise = Column(String)
-    exercise_type = Column(String)
-    created_at = Column(DateTime, default=datetime.utcnow)
-    sets = relationship("WorkoutSet", back_populates="workout", cascade="all, delete-orphan")  # Add cascade
 
-# Configure relationships after all models are defined
-mapper_registry.configure()
+
+
+
+
+
 
 

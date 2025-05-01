@@ -1,10 +1,13 @@
-from fastapi import FastAPI, HTTPException, Depends
-from sqlalchemy.orm import Session, joinedload
+# This is the main FastAPI application file for the workout tracking app.
+# It includes the API endpoints for creating, retrieving, and deleting workouts.
+# It also includes the necessary database setup and models.
 from database import SessionLocal, engine, Workout, WorkoutSet, WorkoutRep
 from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
 from datetime import datetime
 from typing import List
+from fastapi import FastAPI, HTTPException, Depends
+from sqlalchemy.orm import Session, joinedload
 
 
 app = FastAPI()
@@ -85,3 +88,4 @@ def delete_workout(workout_id: int, db: Session = Depends(get_db)):
     db.delete(workout)
     db.commit()
     return {"message": "Workout deleted successfully"}
+    
