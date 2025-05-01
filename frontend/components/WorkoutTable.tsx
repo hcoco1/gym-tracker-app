@@ -55,6 +55,45 @@ export default function WorkoutTable({ workouts, onDelete }: WorkoutTableProps) 
           row.sets?.reduce((total, set) => total + (set.reps?.length || 0), 0) || 0,
       },
       {
+        header: 'Weights (kg)',
+        cell: ({ row }) => {
+          const weights = row.original.sets.flatMap(set => 
+            set.reps.map(rep => rep.weight)
+          );
+          const uniqueWeights = [...new Set(weights)];
+          
+          return (
+            <div className="flex flex-wrap gap-1">
+              {uniqueWeights.map((weight, i) => (
+                <span 
+                  key={i} 
+                  className="bg-gray-100 px-2 py-1 rounded text-xs"
+                >
+                  {weight}kg
+                </span>
+              ))}
+            </div>
+          );
+        },
+      },
+      {
+        header: 'Set Details',
+        cell: ({ row }) => (
+          <div className="space-y-1">
+            {row.original.sets.map((set) => (
+              <div key={set.set_number} className="text-xs">
+                Set {set.set_number}:{' '}
+                {set.reps.map((rep, i) => (
+                  <span key={i}>
+                    {rep.weight}kg{rep.rep_number < set.reps.length ? ', ' : ''}
+                  </span>
+                ))}
+              </div>
+            ))}
+          </div>
+        ),
+      },
+      {
         header: 'Actions',
         cell: ({ row }) => (
           <button
