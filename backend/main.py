@@ -15,7 +15,7 @@ app = FastAPI()
 origins = os.getenv("CORS_ORIGINS", "").split(",")
 origins = [origin.strip() for origin in origins if origin.strip()]
 
-# Add CORS middleware
+# Add CORS middleware - REMOVE THE MANUAL OPTIONS HANDLER
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
@@ -24,14 +24,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Catch-all for OPTIONS preflight
-@app.options("/{full_path:path}")
-def preflight_handler(full_path: str):
-    response = Response()
-    response.headers["Access-Control-Allow-Origin"] = origins[0] if origins else "*"
-    response.headers["Access-Control-Allow-Methods"] = "GET, POST, DELETE, OPTIONS"
-    response.headers["Access-Control-Allow-Headers"] = "*"
-    return response
+
 
 
 # Dependency
