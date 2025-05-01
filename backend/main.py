@@ -5,11 +5,13 @@ from fastapi.responses import Response
 from sqlalchemy.orm import Session, joinedload
 from typing import List
 from datetime import datetime
+import logging
 from pydantic import BaseModel
 from database import SessionLocal, engine, Workout, WorkoutSet, WorkoutRep
 
 
 app = FastAPI()
+logger = logging.getLogger(__name__)
 
 # CORS Configuration
 app.add_middleware(
@@ -86,13 +88,20 @@ def create_workout(workout: WorkoutCreate, db: Session = Depends(get_db)):
     db.refresh(db_workout)
     return db_workout
 
+
+
 @app.delete("/workouts/{id}")
 def delete_workout(id: int, db: Session = Depends(get_db)):
-    workout = db.query(Workout).filter(Workout.id == id).first()
-    if not workout:
-        raise HTTPException(status_code=404, detail="Workout not found")
-    db.delete(workout)
-    db.commit()
-    return {"detail": "Workout deleted"}
+    try:
+        workout = db.query(Workout).filter(Workout.id == id).first()
+        if not workout:
+            raise HTTPException(status_code=404, detail="Workout not found")
 
+        db.delete(workout)
+        db.commit()
+        return {"detail": f"Workout {id} deleted successfully"}
+
+    except Exception as e:
+        logger.exception(f"Error deleting workout with ID {id}: {str(e)}")
+        raise HTTPException(status_code=500, detail="An error occurred while deleting the workout.")
     
