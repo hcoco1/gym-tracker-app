@@ -11,17 +11,17 @@ from database import SessionLocal, engine, Workout, WorkoutSet, WorkoutRep
 
 app = FastAPI()
 
-# Read CORS origins from environment
-origins = os.getenv("CORS_ORIGINS", "").split(",")
-origins = [origin.strip() for origin in origins if origin.strip()]
-
-# Add CORS middleware - REMOVE THE MANUAL OPTIONS HANDLER
+# CORS Configuration
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Temporary wildcard
+    allow_origins=[
+        "https://gym-tracker-app-nqup.vercel.app",
+        "http://localhost:3000"
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["*"]
 )
 
 
@@ -88,6 +88,7 @@ def create_workout(workout: WorkoutCreate, db: Session = Depends(get_db)):
 
 @app.delete("/workouts/{workout_id}")
 def delete_workout(workout_id: int, db: Session = Depends(get_db)):
+    print(f"DELETE request received for workout {workout_id}")
     workout = db.query(Workout).filter(Workout.id == workout_id).first()
     if not workout:
         raise HTTPException(status_code=404, detail="Workout not found")
