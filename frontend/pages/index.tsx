@@ -6,12 +6,14 @@ import WorkoutTable from '../components/WorkoutTable';
 import Navbar from '../components/Navbar';
 
 export default function Home() {
-  const { workouts, fetchWorkouts } = useWorkoutStore();
+  const { workouts, fetchWorkouts, loading, setLoading } = useWorkoutStore();
 
+  // Fetch workouts when the component mounts
   useEffect(() => {
     fetchWorkouts();
   }, [fetchWorkouts]);
 
+  // Handle delete functionality
   const handleDelete = async (id: number) => {
     try {
       await axios.delete(`${process.env.NEXT_PUBLIC_API_URL}/workouts/${id}`);
@@ -25,6 +27,11 @@ export default function Home() {
       }
     }
   };
+
+  // Show a loading indicator while workouts are being fetched
+  if (loading) {
+    return <div className="flex justify-center items-center h-screen">Loading...</div>;
+  }
 
   return (
     <div className="min-h-screen bg-gray-100">
