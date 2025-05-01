@@ -1,5 +1,5 @@
 // components/WorkoutDashboard.tsx
-import { Workout } from './WorkoutTable';
+import { Workout } from '../types/workout';
 import WorkoutForm from './WorkoutForm';
 import WorkoutTable from './WorkoutTable';
 import WorkoutListCard from './WorkoutListCard';
