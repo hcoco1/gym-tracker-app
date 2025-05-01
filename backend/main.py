@@ -16,10 +16,7 @@ logger = logging.getLogger(__name__)
 # CORS Configuration
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "https://gym-tracker-app-nqup.vercel.app",
-        "http://localhost:3000"
-    ],
+    allow_origins=["*"],  # Temporarily allow all for testing
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -66,7 +63,7 @@ def get_workouts(db: Session = Depends(get_db)):
         joinedload(Workout.sets).joinedload(WorkoutSet.reps)
     ).all()
 
-@app.post("/workouts/")
+@app.post("/workouts")
 def create_workout(workout: WorkoutCreate, db: Session = Depends(get_db)):
     db_workout = Workout(
         exercise=workout.exercise,

@@ -1,7 +1,7 @@
 // components/WorkoutDashboard.tsx
 import { Workout } from '../types/workout';
 import WorkoutForm from './WorkoutForm';
-import WorkoutTable from './WorkoutTable';
+
 import WorkoutListCard from './WorkoutListCard';
 
 interface WorkoutDashboardProps {
@@ -19,7 +19,7 @@ export default function WorkoutDashboard({ workouts, onDelete }: WorkoutDashboar
       <div className="lg:col-span-2 space-y-6">
         {/* Desktop Table */}
         <div className="hidden lg:block bg-white rounded-lg shadow p-6">
-          <WorkoutTable workouts={workouts} onDelete={onDelete} />
+   
         </div>
         
         {/* Mobile Cards */}

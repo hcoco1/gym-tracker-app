@@ -1,209 +1,119 @@
+// components/WorkoutForm.tsx
 import { useState } from 'react';
 import axios from 'axios';
-import { useWorkoutStore } from '../store/useWorkoutStore';
-import { Workout, WorkoutSet } from '../types/workout';
 
 const exercisesByType = {
-  push: ["Barbell Bench Press", "Incline Dumbbell Press", "Overhead Shoulder Press", "Lateral Raises", "Dips", "Tricep Pushdowns", "Cable Chest Flys"],
-  pull: ["Pull-Ups", "Bent-Over Rows", "Lat Pulldowns", "Seated Cable Rows", "Face Pulls", "Barbell Curls", "Incline Dumbbell Curls"],
-  legs: ["Barbell Squats", "Romanian Deadlifts", "Walking Lunges", "Leg Press", "Leg Extensions", "Glute Kickbacks", "Hip Thrusts", "Bulgarian Split Squats", "Deadlifts", "Leg Curls", "Abductor Machine"],
-  core: ["Cable Woodchoppers", "Leg Raises", "Planks", "Cable Crunches", "Russian Twists", "Mountain Climbers", "Flutter Kicks"],
-  cardio: ["Cycling", "Treadmill", "Swimming"]
-} as const;
-
-type ExerciseType = keyof typeof exercisesByType;
-
-interface SetFormData {
-  weight: string;
-  reps: string;
-}
+  push: ["Bench Press", "Shoulder Press"],
+  pull: ["Pull Ups", "Rows"],
+  legs: ["Squats", "Deadlifts"]
+};
 
 export default function WorkoutForm() {
-  const [exerciseType, setExerciseType] = useState<ExerciseType>('push');
+  const [exerciseType, setExerciseType] = useState<keyof typeof exercisesByType>('push');
   const [selectedExercise, setSelectedExercise] = useState('');
-  const [sets, setSets] = useState<SetFormData[]>([{ weight: '', reps: '' }]);
-  const { fetchWorkouts } = useWorkoutStore();
+  const [sets, setSets] = useState([{ weight: '', reps: '' }]);
 
-  const handleSetAdd = () => {
-    setSets(prev => [...prev, { weight: '', reps: '' }]);
-  };
-
-  const handleSetRemove = (index: number) => {
-    if (sets.length > 1) {
-      setSets(prev => prev.filter((_, i) => i !== index));
-    }
-  };
-
-  const handleSetChange = (index: number, field: keyof SetFormData, value: string) => {
-    setSets(prev => {
-      const newSets = [...prev];
-      newSets[index] = { ...newSets[index], [field]: value };
-      return newSets;
-    });
-  };
+  const handleAddSet = () => setSets([...sets, { weight: '', reps: '' }]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!selectedExercise) {
-      alert('Please select an exercise');
-      return;
-    }
-
-    // Validate all sets
-    const invalidSets = sets.some(set => 
-      isNaN(parseFloat(set.weight)) || 
-      isNaN(parseInt(set.reps)) ||
-      parseFloat(set.weight) < 0 ||
-      parseInt(set.reps) <= 0
-    );
-
-    if (invalidSets) {
-      alert('Please enter valid weight (≥0) and reps (≥1) for all sets');
-      return;
-    }
-
     try {
-      const workoutData: Omit<Workout, 'id'> = {
+      await axios.post('https://gym-tracker-app-backend.onrender.com/workouts', {
         exercise: selectedExercise,
         exercise_type: exerciseType,
-        created_at: new Date().toISOString(),
-        sets: sets.map((set, index) => {
-          const weight = parseFloat(set.weight);
-          const reps = parseInt(set.reps);
-          const workoutSet: WorkoutSet = {
-            set_number: index + 1,
-            weight,
-            reps,
-            rep_objects: Array(reps).fill(null).map((_, i) => ({
-              rep_number: i + 1,
-              weight
-            }))
-          };
-          return workoutSet;
-        })
-      };
-
-      await axios.post(
-        `${process.env.NEXT_PUBLIC_API_URL}/workouts/`,
-        workoutData
-      );
-
-      await fetchWorkouts();
+        sets: sets.map((set, index) => ({
+          set_number: index + 1,
+          reps: [{
+            rep_number: 1, // Single rep per set
+            weight: Number(set.weight)
+          }]
+        }))
+      }, {
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      alert('Workout saved successfully!');
       setSets([{ weight: '', reps: '' }]);
-      setSelectedExercise('');
     } catch (error) {
-      console.error('Error saving workout:', error);
-      if (axios.isAxiosError(error)) {
-        alert(`Error: ${error.response?.data?.message || error.message}`);
-      } else {
-        alert('An unexpected error occurred');
-      }
+      console.error('Save failed:', error);
+      alert('Failed to save workout');
     }
   };
 
   return (
-    <form onSubmit={handleSubmit} className="mb-8 p-4 border rounded-lg bg-white shadow-sm">
-      <h2 className="text-2xl font-bold mb-6 text-gray-800">Log New Workout</h2>
-      
-      <div className="space-y-4">
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Workout Type</label>
-            <select
-              value={exerciseType}
-              onChange={(e) => {
-                setExerciseType(e.target.value as ExerciseType);
-                setSelectedExercise('');
-              }}
-              className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500"
-            >
-              {Object.keys(exercisesByType).map((type) => (
-                <option key={type} value={type}>
-                  {type.charAt(0).toUpperCase() + type.slice(1)}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Exercise</label>
-            <select
-              value={selectedExercise}
-              onChange={(e) => setSelectedExercise(e.target.value)}
-              className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500"
-              required
-            >
-              <option value="">Select Exercise</option>
-              {exercisesByType[exerciseType].map((exercise) => (
-                <option key={exercise} value={exercise}>
-                  {exercise}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
-
-        <div className="space-y-4">
-          {sets.map((set, setIndex) => (
-            <div key={setIndex} className="border p-4 rounded-lg bg-gray-50">
-              <div className="flex justify-between items-center mb-3">
-                <h3 className="font-medium text-gray-700">Set {setIndex + 1}</h3>
-                {sets.length > 1 && (
-                  <button
-                    type="button"
-                    onClick={() => handleSetRemove(setIndex)}
-                    className="text-sm bg-red-100 text-red-600 px-2 py-1 rounded hover:bg-red-200"
-                  >
-                    Remove Set
-                  </button>
-                )}
-              </div>
-              
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm text-gray-600 mb-1">Weight (kg)</label>
-                  <input
-                    type="number"
-                    step="0.5"
-                    min="0"
-                    value={set.weight}
-                    onChange={(e) => handleSetChange(setIndex, 'weight', e.target.value)}
-                    className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm text-gray-600 mb-1">Reps</label>
-                  <input
-                    type="number"
-                    min="1"
-                    value={set.reps}
-                    onChange={(e) => handleSetChange(setIndex, 'reps', e.target.value)}
-                    className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500"
-                    required
-                  />
-                </div>
-              </div>
-            </div>
+    <form onSubmit={handleSubmit} className="p-4 space-y-4">
+      <div className="space-y-2">
+        <select
+          value={exerciseType}
+          onChange={(e) => setExerciseType(e.target.value as any)}
+          className="w-full p-2 border rounded"
+        >
+          {Object.keys(exercisesByType).map((type) => (
+            <option key={type} value={type}>{type}</option>
           ))}
-        </div>
+        </select>
 
-        <div className="flex gap-3">
-          <button
-            type="button"
-            onClick={handleSetAdd}
-            className="px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200"
-          >
-            Add Set +
-          </button>
-          <button
-            type="submit"
-            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-          >
-            Save Workout
-          </button>
-        </div>
+        <select
+          value={selectedExercise}
+          onChange={(e) => setSelectedExercise(e.target.value)}
+          className="w-full p-2 border rounded"
+          required
+        >
+          <option value="">Select Exercise</option>
+          {exercisesByType[exerciseType].map((exercise) => (
+            <option key={exercise} value={exercise}>{exercise}</option>
+          ))}
+        </select>
+      </div>
+
+      <div className="space-y-2">
+        {sets.map((set, index) => (
+          <div key={index} className="flex gap-2">
+            <input
+              type="number"
+              placeholder="Weight"
+              value={set.weight}
+              onChange={(e) => {
+                const newSets = [...sets];
+                newSets[index].weight = e.target.value;
+                setSets(newSets);
+              }}
+              className="p-2 border rounded flex-1"
+              required
+            />
+            <input
+              type="number"
+              placeholder="Reps"
+              value={set.reps}
+              onChange={(e) => {
+                const newSets = [...sets];
+                newSets[index].reps = e.target.value;
+                setSets(newSets);
+              }}
+              className="p-2 border rounded flex-1"
+              required
+            />
+          </div>
+        ))}
+      </div>
+
+      <div className="flex gap-2">
+        <button
+          type="button"
+          onClick={handleAddSet}
+          className="px-4 py-2 bg-gray-200 rounded"
+        >
+          Add Set
+        </button>
+        <button
+          type="submit"
+          className="px-4 py-2 bg-blue-500 text-white rounded"
+        >
+          Save Workout
+        </button>
       </div>
     </form>
   );
