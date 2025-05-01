@@ -32,7 +32,7 @@ export default function WorkoutForm() {
 
   const handleSetAdd = () => {
     setSets(prev => [...prev, { 
-      reps: Array(5).fill(null).map((_, i) => ({ 
+      reps: Array(3).fill(null).map((_, i) => ({ 
         weight: 0, 
         rep_number: i + 1 
       })) 
@@ -160,7 +160,7 @@ export default function WorkoutForm() {
                 )}
               </div>
               
-              <div className="grid grid-cols-5 gap-2">
+              <div className="grid grid-cols-3 gap-3">
                 {set.reps.map((rep, repIndex) => (
                   <div key={repIndex} className="space-y-1">
                     <label className="block text-xs text-gray-600">Rep {rep.rep_number}</label>
@@ -170,7 +170,7 @@ export default function WorkoutForm() {
                       min="0"
                       value={rep.weight || ''}
                       onChange={(e) => handleWeightChange(setIndex, repIndex, e.target.value)}
-                      className="w-full p-1 border rounded-md focus:ring-1 focus:ring-blue-500 text-sm"
+                      className="w-full p-2 border rounded-md focus:ring-1 focus:ring-blue-500 text-sm"
                     />
                   </div>
                 ))}
