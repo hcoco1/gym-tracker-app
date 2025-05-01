@@ -48,7 +48,8 @@ export default function WorkoutForm() {
     e.preventDefault();
     
     try {
-      const response = await axios.post('http://localhost:8000/workouts/', {
+      const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/workouts/`, {
+
         exercise: selectedExercise,
         exercise_type: exerciseType,
         sets: sets.map((set, setIndex) => ({

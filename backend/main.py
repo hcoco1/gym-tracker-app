@@ -86,14 +86,13 @@ def create_workout(workout: WorkoutCreate, db: Session = Depends(get_db)):
     db.refresh(db_workout)
     return db_workout
 
-@app.delete("/workouts/{workout_id}")
-def delete_workout(workout_id: int, db: Session = Depends(get_db)):
-    print(f"DELETE request received for workout {workout_id}")
-    workout = db.query(Workout).filter(Workout.id == workout_id).first()
+@app.delete("/workouts/{id}")
+def delete_workout(id: int, db: Session = Depends(get_db)):
+    workout = db.query(Workout).filter(Workout.id == id).first()
     if not workout:
         raise HTTPException(status_code=404, detail="Workout not found")
     db.delete(workout)
     db.commit()
-    return {"message": "Workout deleted successfully"}
+    return {"detail": "Workout deleted"}
 
     
