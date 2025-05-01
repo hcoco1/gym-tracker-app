@@ -1,15 +1,12 @@
-'use client';
-
+// components/WorkoutTable.tsx
 import {
   ColumnDef,
   flexRender,
   getCoreRowModel,
   useReactTable,
 } from '@tanstack/react-table';
-import { useMemo } from 'react';
 import { Workout } from '../types/workout';
-
-
+import { useMemo } from 'react';
 
 interface WorkoutTableProps {
   workouts: Workout[];
@@ -31,56 +28,16 @@ export default function WorkoutTable({ workouts, onDelete }: WorkoutTableProps) 
       {
         header: 'Date',
         accessorKey: 'created_at',
-        cell: (info) =>
-          new Date(info.getValue() as string).toLocaleDateString(),
+        cell: (info) => new Date(info.getValue() as string).toLocaleDateString(),
       },
       {
         header: 'Sets',
-        accessorFn: (row) => row.sets?.length || 0,
+        accessorFn: (row) => row.sets.length,
       },
       {
         header: 'Reps',
-        accessorFn: (row) =>
-          row.sets?.reduce((total, set) => total + (set.reps?.length || 0), 0) || 0,
-      },
-      {
-        header: 'Weights (kg)',
-        cell: ({ row }) => {
-          const weights = row.original.sets.flatMap(set => 
-            set.reps.map(rep => rep.weight)
-          );
-          const uniqueWeights = [...new Set(weights)];
-          
-          return (
-            <div className="flex flex-wrap gap-1">
-              {uniqueWeights.map((weight, i) => (
-                <span 
-                  key={i} 
-                  className="bg-gray-100 px-2 py-1 rounded text-xs"
-                >
-                  {weight}kg
-                </span>
-              ))}
-            </div>
-          );
-        },
-      },
-      {
-        header: 'Set Details',
-        cell: ({ row }) => (
-          <div className="space-y-1">
-            {row.original.sets.map((set) => (
-              <div key={set.set_number} className="text-xs">
-                Set {set.set_number}:{' '}
-                {set.reps.map((rep, i) => (
-                  <span key={i}>
-                    {rep.weight}kg{rep.rep_number < set.reps.length ? ', ' : ''}
-                  </span>
-                ))}
-              </div>
-            ))}
-          </div>
-        ),
+        accessorFn: (row) => 
+          row.sets.reduce((total, set) => total + set.reps, 0),
       },
       {
         header: 'Actions',
@@ -89,7 +46,7 @@ export default function WorkoutTable({ workouts, onDelete }: WorkoutTableProps) 
             className="text-red-500 hover:underline"
             onClick={() => onDelete(row.original.id)}
           >
-            X
+            Delete
           </button>
         ),
       },
