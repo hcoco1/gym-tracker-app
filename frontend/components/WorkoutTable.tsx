@@ -13,6 +13,13 @@ export interface Workout {
   exercise: string;
   exercise_type: string;
   created_at: string;
+  sets: Array<{
+    set_number: number;
+    reps: Array<{
+      rep_number: number;
+      weight: number;
+    }>;
+  }>;
 }
 
 interface WorkoutTableProps {
@@ -37,6 +44,15 @@ export default function WorkoutTable({ workouts, onDelete }: WorkoutTableProps) 
         accessorKey: 'created_at',
         cell: (info) =>
           new Date(info.getValue() as string).toLocaleDateString(),
+      },
+      {
+        header: 'Sets',
+        accessorFn: (row) => row.sets?.length || 0,
+      },
+      {
+        header: 'Reps',
+        accessorFn: (row) =>
+          row.sets?.reduce((total, set) => total + (set.reps?.length || 0), 0) || 0,
       },
       {
         header: 'Actions',
