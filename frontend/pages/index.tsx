@@ -6,7 +6,7 @@ import WorkoutTable from '../components/WorkoutTable';
 import Navbar from '../components/Navbar';
 
 export default function Home() {
-  const { workouts, fetchWorkouts, loading, setLoading } = useWorkoutStore();
+  const { workouts, fetchWorkouts, loading } = useWorkoutStore();
 
   // Fetch workouts when the component mounts
   useEffect(() => {
