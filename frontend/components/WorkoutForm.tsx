@@ -84,7 +84,7 @@ export default function WorkoutForm() {
         })
       };
 
-      const response = await axios.post<Workout>(
+      await axios.post(
         `${process.env.NEXT_PUBLIC_API_URL}/workouts/`,
         workoutData
       );

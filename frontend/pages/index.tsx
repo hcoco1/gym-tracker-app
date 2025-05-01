@@ -6,7 +6,7 @@ import Navbar from '../components/Navbar';
 import WorkoutForm from '../components/WorkoutForm';
 import WorkoutListCard from '../components/WorkoutListCard';
 import WorkoutTable from '../components/WorkoutTable';
-import { Workout } from '../types/workout';
+
 
 export default function Home() {
   const { workouts, fetchWorkouts } = useWorkoutStore();
