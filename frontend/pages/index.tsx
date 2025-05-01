@@ -15,7 +15,7 @@ export default function Home() {
     try {
       {/* await axios.delete(`http://localhost:8000/workouts/${id}`);*/}
       try {
-        await axios.delete(`https://gym-tracker-fastapi.onrender.com/workouts/${id}`);
+        await axios.delete(`gym-tracker-app-backend.onrender.com/workouts/${id}`);
       } catch (error) {
         if (axios.isAxiosError(error)) {
           console.error("Full error object:", error.toJSON());
