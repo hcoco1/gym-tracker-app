@@ -88,7 +88,7 @@ export default function WorkoutForm() {
 
       await fetchWorkouts();
       setSets([{ 
-        reps: Array(5).fill(null).map((_, i) => ({ 
+        reps: Array(3).fill(null).map((_, i) => ({ 
           weight: 0, 
           rep_number: i + 1 
         })) 
