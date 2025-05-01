@@ -100,7 +100,7 @@ export default function WorkoutTable({ workouts, onDelete }: WorkoutTableProps) 
             className="text-red-500 hover:underline"
             onClick={() => onDelete(row.original.id)}
           >
-            Delete
+            X
           </button>
         ),
       },

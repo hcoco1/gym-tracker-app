@@ -10,23 +10,19 @@ const exercisesByType = {
   cardio: ["Cycling", "Treadmill", "Swimming"]
 };
 
-interface RepData {
-  weight: string;
-  rep_number: number;
-}
-
 interface SetData {
-  reps: RepData[];
+  weight: string;
+  reps: string;
 }
 
 export default function WorkoutForm() {
   const [exerciseType, setExerciseType] = useState<keyof typeof exercisesByType>('push');
   const [selectedExercise, setSelectedExercise] = useState('');
-  const [sets, setSets] = useState<SetData[]>([{ reps: [{ weight: '', rep_number: 1 }] }]);
+  const [sets, setSets] = useState<SetData[]>([{ weight: '', reps: '' }]);
   const { fetchWorkouts } = useWorkoutStore();
 
   const handleSetAdd = () => {
-    setSets(prev => [...prev, { reps: [{ weight: '', rep_number: 1 }] }]);
+    setSets(prev => [...prev, { weight: '', reps: '' }]);
   };
 
   const handleSetRemove = (index: number) => {
@@ -35,36 +31,10 @@ export default function WorkoutForm() {
     }
   };
 
-  const handleRepAdd = (setIndex: number) => {
+  const handleSetChange = (index: number, field: keyof SetData, value: string) => {
     setSets(prev => {
       const newSets = [...prev];
-      newSets[setIndex].reps.push({ 
-        weight: '', 
-        rep_number: newSets[setIndex].reps.length + 1 
-      });
-      return newSets;
-    });
-  };
-
-  const handleRepRemove = (setIndex: number, repIndex: number) => {
-    if (sets[setIndex].reps.length > 1) {
-      setSets(prev => {
-        const newSets = [...prev];
-        newSets[setIndex].reps = newSets[setIndex].reps.filter((_, i) => i !== repIndex);
-        // Update rep numbers after removal
-        newSets[setIndex].reps = newSets[setIndex].reps.map((rep, i) => ({
-          ...rep,
-          rep_number: i + 1
-        }));
-        return newSets;
-      });
-    }
-  };
-
-  const handleWeightChange = (setIndex: number, repIndex: number, value: string) => {
-    setSets(prev => {
-      const newSets = [...prev];
-      newSets[setIndex].reps[repIndex].weight = value;
+      newSets[index] = { ...newSets[index], [field]: value };
       return newSets;
     });
   };
@@ -77,16 +47,16 @@ export default function WorkoutForm() {
       return;
     }
 
-    // Validate all reps have valid weights
-    const hasInvalidReps = sets.some(set => 
-      set.reps.some(rep => 
-        isNaN(parseFloat(rep.weight)) || 
-        parseFloat(rep.weight) < 0
-      )
+    // Validate all sets
+    const invalidSets = sets.some(set => 
+      isNaN(parseFloat(set.weight)) || 
+      isNaN(parseInt(set.reps)) ||
+      parseFloat(set.weight) < 0 ||
+      parseInt(set.reps) <= 0
     );
 
-    if (hasInvalidReps) {
-      alert('Please enter valid weight (≥0) for all reps');
+    if (invalidSets) {
+      alert('Please enter valid weight (≥0) and reps (≥1) for all sets');
       return;
     }
 
@@ -94,12 +64,10 @@ export default function WorkoutForm() {
       const payload = {
         exercise: selectedExercise,
         exercise_type: exerciseType,
-        sets: sets.map((set, setIndex) => ({
-          set_number: setIndex + 1,
-          reps: set.reps.map(rep => ({
-            rep_number: rep.rep_number,
-            weight: Number(rep.weight)
-          }))
+        sets: sets.map((set, index) => ({
+          set_number: index + 1,
+          weight: Number(set.weight),
+          reps: Number(set.reps)
         }))
       };
 
@@ -116,7 +84,7 @@ export default function WorkoutForm() {
       );
 
       await fetchWorkouts();
-      setSets([{ reps: [{ weight: '', rep_number: 1 }] }]);
+      setSets([{ weight: '', reps: '' }]);
       setSelectedExercise('');
       
     } catch (error) {
@@ -184,44 +152,30 @@ export default function WorkoutForm() {
                 )}
               </div>
               
-              <div className="space-y-3">
-                {set.reps.map((rep, repIndex) => (
-                  <div key={repIndex} className="grid grid-cols-3 gap-3 items-end">
-                    <div>
-                      <label className="block text-sm text-gray-600 mb-1">Rep {rep.rep_number}</label>
-                    </div>
-                    <div>
-                      <label className="block text-sm text-gray-600 mb-1">Weight (kg)</label>
-                      <input
-                        type="number"
-                        step="0.5"
-                        min="0"
-                        value={rep.weight}
-                        onChange={(e) => handleWeightChange(setIndex, repIndex, e.target.value)}
-                        className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500"
-                        required
-                      />
-                    </div>
-                    <div>
-                      {set.reps.length > 1 && (
-                        <button
-                          type="button"
-                          onClick={() => handleRepRemove(setIndex, repIndex)}
-                          className="text-sm bg-red-100 text-red-600 px-2 py-1 rounded hover:bg-red-200 w-full"
-                        >
-                          Remove
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                ))}
-                <button
-                  type="button"
-                  onClick={() => handleRepAdd(setIndex)}
-                  className="text-sm bg-blue-100 text-blue-600 px-2 py-1 rounded hover:bg-blue-200"
-                >
-                  + Add Rep
-                </button>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm text-gray-600 mb-1">Weight (kg)</label>
+                  <input
+                    type="number"
+                    step="0.5"
+                    min="0"
+                    value={set.weight}
+                    onChange={(e) => handleSetChange(setIndex, 'weight', e.target.value)}
+                    className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm text-gray-600 mb-1">Reps</label>
+                  <input
+                    type="number"
+                    min="1"
+                    value={set.reps}
+                    onChange={(e) => handleSetChange(setIndex, 'reps', e.target.value)}
+                    className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500"
+                    required
+                  />
+                </div>
               </div>
             </div>
           ))}
