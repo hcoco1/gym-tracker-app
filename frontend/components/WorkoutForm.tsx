@@ -46,24 +46,63 @@ export default function WorkoutForm() {
       alert('Please select an exercise');
       return;
     }
-
+  
+    // Validate all sets
+    const invalidSets = sets.filter(set => 
+      isNaN(parseFloat(set.weight)) || 
+      isNaN(parseInt(set.reps)) ||
+      parseFloat(set.weight) < 0 ||
+      parseInt(set.reps) <= 0
+    );
+  
+    if (invalidSets.length > 0) {
+      alert('Please enter valid weight (≥0) and reps (≥1) for all sets');
+      return;
+    }
+  
     try {
-      await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/workouts/`, {
+      const payload = {
         exercise: selectedExercise,
         exercise_type: exerciseType,
         sets: sets.map((set, index) => ({
           set_number: index + 1,
-          weight: parseFloat(set.weight) || 0,
-          reps: parseInt(set.reps) || 0
+          weight: Number(set.weight), // Ensure number type
+          reps: Number(set.reps)      // Ensure number type
         }))
-      });
-
+      };
+  
+      // Debugging: Log the payload
+      console.log('Request payload:', JSON.stringify(payload, null, 2));
+  
+      const response = await axios.post(
+        `${process.env.NEXT_PUBLIC_API_URL}/workouts/`,
+        payload,
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          }
+        }
+      );
+  
       await fetchWorkouts();
       setSets([{ weight: '', reps: '' }]);
       setSelectedExercise('');
+      
     } catch (error) {
-      console.error('Error creating workout:', error);
-      alert('Failed to save workout. Please try again.');
+      if (axios.isAxiosError(error)) {
+        console.error('Full error response:', error.response?.data);
+        
+        // Display server validation errors if available
+        if (error.response?.data?.detail) {
+          alert(`Server validation error: ${error.response.data.detail}`);
+        } else {
+          alert('Failed to save workout. Please check your data and try again.');
+        }
+      } else {
+        console.error('Unexpected error:', error);
+        alert('An unexpected error occurred');
+      }
     }
   };
 
