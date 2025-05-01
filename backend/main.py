@@ -12,12 +12,19 @@ from sqlalchemy.orm import Session, joinedload
 
 app = FastAPI()
 
+# ✅ Replace this with your actual frontend URL
+origins = [
+    "https://gym-tracker-app-nqup.vercel.app",
+    "http://localhost:3000"  # Optional: useful for local testing
+]
+
+# ✅ Add CORS middleware before you define any routes
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Temporarily allow all origins for testing
+    allow_origins=origins,  # List of allowed origins
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["*"],    # Or restrict to ["GET", "POST", "DELETE", etc.]
+    allow_headers=["*"],    # Allow all headers
 )
 
 
