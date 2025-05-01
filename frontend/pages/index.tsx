@@ -5,48 +5,51 @@ import WorkoutForm from '../components/WorkoutForm';
 import Navbar from '../components/Navbar';
 
 export default function Home() {
-  // Get state and actions from Zustand store
   const { workouts, fetchWorkouts, removeWorkout } = useWorkoutStore();
 
-  // Fetch workouts when component loads
   useEffect(() => {
     fetchWorkouts();
-  }, [fetchWorkouts]); // Runs only when fetchWorkouts changes
+  }, [fetchWorkouts]);
 
-  // Handle workout deletion
   const handleDelete = async (id: number) => {
     try {
-      await axios.delete(`http://localhost:8000/workouts/${id}`);
-      removeWorkout(id); // Update Zustand store
+      await axios.delete(`https://gym-tracker-fastapi.onrender.com/workouts/${id}`);
+      removeWorkout(id);
     } catch (error) {
       console.error('Delete error:', error);
       alert('Failed to delete workout');
     }
   };
 
-  // Calculate workout statistics
-  const totalSets = workouts.reduce((sum, workout) => sum + workout.sets.length, 0);
-  const totalReps = workouts.reduce((sum, workout) => 
-    sum + workout.sets.reduce((setSum, set) => setSum + set.reps.length, 0), 0);
-  const totalVolume = Number(workouts.reduce((sum, workout) => 
-    sum + workout.sets.reduce((setSum, set) => 
-      setSum + set.reps.reduce((repSum, rep) => repSum + rep.weight, 0), 0), 0).toFixed(1));
+  if (!Array.isArray(workouts)) {
+    return (
+      <div className="min-h-screen bg-gray-100">
+        <Navbar />
+        <main className="container mx-auto p-4 text-center text-gray-700">
+          Loading workouts...
+        </main>
+      </div>
+    );
+  }
+
+  const totalSets = workouts.reduce((sum, workout) => sum + (workout.sets?.length || 0), 0);
+  const totalReps = workouts.reduce((sum, workout) =>
+    sum + (workout.sets?.reduce((setSum, set) => setSum + (set.reps?.length || 0), 0) || 0), 0);
+  const totalVolume = Number(workouts.reduce((sum, workout) =>
+    sum + (workout.sets?.reduce((setSum, set) =>
+      setSum + (set.reps?.reduce((repSum, rep) => repSum + (rep.weight || 0), 0) || 0), 0) || 0), 0).toFixed(1));
 
   return (
     <div className="min-h-screen bg-gray-100">
       <Navbar />
-      
       <main className="container mx-auto p-4">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Workout Form Column */}
           <div className="lg:col-span-1">
             <WorkoutForm />
           </div>
 
-          {/* Workout History Column */}
           <div className="lg:col-span-2">
             <div className="bg-white rounded-lg shadow p-6">
-              {/* Statistics Cards */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
                 <div className="bg-blue-50 p-4 rounded-lg">
                   <h3 className="text-sm text-blue-600">Total Sets</h3>
@@ -62,11 +65,9 @@ export default function Home() {
                 </div>
               </div>
 
-              {/* Workout List */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {workouts.map(workout => (
+                {workouts.map((workout) => (
                   <div key={workout.id} className="p-4 border rounded-lg hover:shadow-lg transition-shadow">
-                    {/* Workout Header */}
                     <div className="flex justify-between items-start mb-3">
                       <div>
                         <h3 className="font-bold text-lg">{workout.exercise}</h3>
@@ -74,10 +75,10 @@ export default function Home() {
                           {new Date(workout.created_at).toLocaleDateString()}
                         </p>
                         <span className="inline-block mt-1 px-2 py-1 text-xs font-medium text-blue-600 bg-blue-100 rounded">
-                          {workout.exercise_type.toUpperCase()}
+                          {workout.exercise_type?.toUpperCase()}
                         </span>
                       </div>
-                      <button 
+                      <button
                         onClick={() => handleDelete(workout.id)}
                         className="text-red-500 hover:text-red-700 px-3 py-1 rounded"
                       >
@@ -85,20 +86,15 @@ export default function Home() {
                       </button>
                     </div>
 
-                    {/* Sets and Reps */}
                     <div className="space-y-2">
-                      {workout.sets.map((set, setIndex) => (
+                      {workout.sets?.map((set, setIndex) => (
                         <div key={setIndex} className="text-sm border-l-2 border-blue-200 pl-2">
-                          <div className="font-medium text-gray-700">
-                            Set {set.set_number}
-                          </div>
+                          <div className="font-medium text-gray-700">Set {set.set_number}</div>
                           <div className="grid grid-cols-3 gap-2 mt-1">
-                            {set.reps.map((rep, repIndex) => (
+                            {set.reps?.map((rep, repIndex) => (
                               <div key={repIndex} className="text-gray-600">
                                 Rep {rep.rep_number}:{" "}
-                                <span className="text-gray-800 font-medium">
-                                  {rep.weight}kg
-                                </span>
+                                <span className="text-gray-800 font-medium">{rep.weight}kg</span>
                               </div>
                             ))}
                           </div>
