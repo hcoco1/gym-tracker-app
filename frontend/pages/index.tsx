@@ -13,6 +13,7 @@ export default function Home() {
 
   const handleDelete = async (id: number) => {
     try {
+      {/* await axios.delete(`http://localhost:8000/workouts/${id}`);*/}
       await axios.delete(`https://gym-tracker-fastapi.onrender.com/workouts/${id}`);
       removeWorkout(id); // Update Zustand store
     } catch (error) {

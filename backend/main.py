@@ -1,34 +1,40 @@
-# This is the main FastAPI application file for the workout tracking app.
-# It includes the API endpoints for creating, retrieving, and deleting workouts.
-# It also includes the necessary database setup and models.
-from database import SessionLocal, engine, Workout, WorkoutSet, WorkoutRep
-from pydantic import BaseModel
-from fastapi.middleware.cors import CORSMiddleware
-from datetime import datetime
-from typing import List
+import os
 from fastapi import FastAPI, HTTPException, Depends
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import Response
 from sqlalchemy.orm import Session, joinedload
-
+from typing import List
+from datetime import datetime
+from pydantic import BaseModel
+from database import SessionLocal, engine, Workout, WorkoutSet, WorkoutRep
 
 app = FastAPI()
 
-# ✅ Replace this with your actual frontend URL
-origins = [
-    "https://gym-tracker-app-nqup.vercel.app",
-    "http://localhost:3000"  # Optional: useful for local testing
-]
+# ✅ Read CORS origins from environment
+origins = os.getenv("CORS_ORIGINS", "").split(",")
+origins = [origin.strip() for origin in origins if origin.strip()]
 
-# ✅ Add CORS middleware before you define any routes
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,  # List of allowed origins
+    allow_origins=[
+        "http://localhost:3000",
+        "https://gym-tracker-app-nqup.vercel.app"
+    ],
     allow_credentials=True,
-    allow_methods=["*"],    # Or restrict to ["GET", "POST", "DELETE", etc.]
-    allow_headers=["*"],    # Allow all headers
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
+# ✅ Catch-all for preflight requests (OPTIONS)
+@app.options("/{full_path:path}")
+def preflight_handler(full_path: str):
+    response = Response()
+    response.headers["Access-Control-Allow-Origin"] = origins[0] if origins else "*"
+    response.headers["Access-Control-Allow-Methods"] = "GET, POST, DELETE, OPTIONS"
+    response.headers["Access-Control-Allow-Headers"] = "*"
+    return response
 
-# Dependency to get DB session
+# Dependency
 def get_db():
     db = SessionLocal()
     try:
@@ -52,11 +58,9 @@ class WorkoutCreate(BaseModel):
 class WorkoutResponse(WorkoutCreate):
     id: int
     created_at: datetime
-
     class Config:
         orm_mode = True
 
-# Update your GET endpoint
 @app.get("/workouts", response_model=List[WorkoutResponse])
 def get_workouts(db: Session = Depends(get_db)):
     return db.query(Workout).options(
@@ -88,11 +92,10 @@ def create_workout(workout: WorkoutCreate, db: Session = Depends(get_db)):
 @app.delete("/workouts/{workout_id}")
 def delete_workout(workout_id: int, db: Session = Depends(get_db)):
     workout = db.query(Workout).filter(Workout.id == workout_id).first()
-    
     if not workout:
         raise HTTPException(status_code=404, detail="Workout not found")
-    
     db.delete(workout)
     db.commit()
     return {"message": "Workout deleted successfully"}
+
     
