@@ -5,7 +5,8 @@ import {
   useReactTable,
 } from "@tanstack/react-table";
 import { format } from "date-fns";
-import { Workout } from "../pages/types";
+import { Workout } from '../types/types';
+
 import { useMemo } from "react";
 
 interface WorkoutTableProps {
