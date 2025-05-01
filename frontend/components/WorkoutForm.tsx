@@ -23,7 +23,7 @@ export default function WorkoutForm() {
   const [exerciseType, setExerciseType] = useState<keyof typeof exercisesByType>('push');
   const [selectedExercise, setSelectedExercise] = useState('');
   const [sets, setSets] = useState<SetData[]>([{ 
-    reps: Array(5).fill(null).map((_, i) => ({ 
+    reps: Array(3).fill(null).map((_, i) => ({ 
       weight: 0, 
       rep_number: i + 1 
     })) 
